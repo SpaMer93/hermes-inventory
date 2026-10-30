@@ -6,6 +6,30 @@ Le tomas una foto a la etiqueta, el modelo de visión propone el producto con su
 
 ![Inicio](media/01-inicio.png)
 
+## Cómo se captura, paso a paso
+
+Son dos fotos y una confirmación. El teléfono no decide nada: propone, y quien captura manda.
+
+**El escaneo.** El botón "Leer" abre el lector con su marco en pantalla y una instrucción poco poética: apunte al código dentro del marco. Lo que se lee se va al campo del producto sin teclear nada. El lector es local, con ML Kit, así que funciona igual de bien sin señal.
+
+![Lector de código de barras](media/03-escaner.png)
+
+**Los campos que se llenan solos.** De la etiqueta salen el nombre, la marca, el modelo, la categoría y la cantidad propuesta. Abajo, la app busca si ese producto ya tiene ficha y, si la encuentra, lo dice antes de que confirmes: la entrada se va a sumar a lo que ya hay en lugar de crear un duplicado. Siempre queda el botón de "Ficha nueva" para cuando de verdad es otro producto.
+
+![Campos autocompletados y propuesta de sumar a la ficha existente](media/04-campos-autocompletados.png)
+
+**Si el producto lleva serie, pide una por unidad.** Esta es la parte que más me gustó resolver. El modelo no decide por su cuenta que algo es serializado: la regla del prompt es estricta. Solo propone `SERIALIZED` cuando de verdad se leyeron números de serie legibles en la foto, y por cantidad en cualquier otro caso. Si detecta dos equipos con serie, aparecen dos campos, uno por unidad, cada uno con su botón "Leer" para escanear la etiqueta del equipo en vez de copiarla a mano.
+
+![Un campo por serie, cada uno con su lector](media/05-serie-leida.png)
+
+**Y antes de confirmar, ves a dónde va.** La suma a la ficha existente no queda escondida: aparece escrita en pantalla y el botón dice exactamente qué va a pasar.
+
+![Confirmación con la ficha destino a la vista](media/06-series-prellenadas.png)
+
+Hay un detalle que el modelo no decide: el modo entre por cantidad y por serie lo elige quien captura, no la ficha de destino. Eso costó una entrada perdida. Si la ficha existente era por cantidad, su modo pisaba el elegido y las series capturadas se descartaban en silencio. Ahora el modo viaja con la captura y el servidor lo respeta.
+
+Y dos reglas más que parecen de sentido común y no lo son. La foto de la etiqueta nunca cuenta como unidad: si fotografías una etiqueta y cuatro cajas, son cuatro. Y si el empaque es un pack y el contenido no se puede confirmar, la cantidad vuelve vacía con un aviso, porque adivinar ahí es la forma más rápida de empezar a mentir.
+
 ## Por qué no es tan simple como suena
 
 Porque una foto miente. La etiqueta está borrosa, la caja trae un pack de diez, el teléfono tiene dos IMEI, la serie ya existe, el modelo alucina una cantidad que nadie pidió. Y porque el almacén no tiene buena señal, así que capturar y confirmar tienen que funcionar sin internet y reconciliarse después sin duplicar nada.
